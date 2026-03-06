@@ -143,6 +143,8 @@ model User {
   payments          Payment[]
   ownedHouseholds   Household[]          @relation("HouseholdOwner")
   householdMembers  HouseholdMember[]
+  createdInvites    HouseholdInvite[]    @relation("InviteCreator")
+  usedInvites       HouseholdInvite[]    @relation("InviteUsedBy")
   foodItemsAdded    FoodItem[]           @relation("FoodItemAddedBy")
   wasteLogs         WasteLog[]           @relation("WasteLogWastedBy")
   recipes           Recipe[]
@@ -212,20 +214,38 @@ model Payment {
 
 /// Hộ gia đình — đơn vị chia sẻ kho thực phẩm
 model Household {
-  id         String   @id @default(uuid()) @db.Uuid
-  name       String   @db.VarChar(100)
-  ownerId    String   @map("owner_id") @db.Uuid
-  inviteCode String?  @unique @map("invite_code") @db.VarChar(20)
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(100)
+  ownerId   String   @map("owner_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  owner         User              @relation("HouseholdOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner         User               @relation("HouseholdOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members       HouseholdMember[]
+  invites       HouseholdInvite[]
   foodItems     FoodItem[]
   wasteLogs     WasteLog[]
   shoppingLists ShoppingList[]
 
   @@map("households")
+}
+
+/// Lời mời tham gia household — token-based invite link
+model HouseholdInvite {
+  id          String    @id @default(uuid()) @db.Uuid
+  householdId String    @map("household_id") @db.Uuid
+  token       String    @unique @db.VarChar(64)
+  createdBy   String    @map("created_by") @db.Uuid
+  expiresAt   DateTime  @map("expires_at")
+  usedAt      DateTime? @map("used_at")
+  usedBy      String?   @map("used_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  household    Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  creator      User      @relation("InviteCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  usedByUser   User?     @relation("InviteUsedBy", fields: [usedBy], references: [id], onDelete: SetNull)
+
+  @@map("household_invites")
 }
 
 /// Thành viên trong household với phân quyền admin / member
