@@ -1,0 +1,14 @@
+// src/common/index.ts
+// Barrel export for all common modules
+
+export * from './config';
+export * from './constants';
+export * from './decorators';
+export * from './dto';
+export * from './exceptions';
+export * from './filters';
+export * from './guards';
+export * from './interceptors';
+export * from './middleware';
+export * from './pipes';
+export * from './utils';
