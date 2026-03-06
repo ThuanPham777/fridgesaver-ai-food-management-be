@@ -32,4 +32,21 @@ export const validationSchema = Joi.object({
   SWAGGER_TITLE: Joi.string().default('API Documentation'),
   SWAGGER_DESCRIPTION: Joi.string().default('API documentation'),
   SWAGGER_VERSION: Joi.string().default('1.0'),
+
+  // Database
+  DATABASE_URL: Joi.string().required(),
+
+  // JWT
+  JWT_ACCESS_SECRET: Joi.string().required(),
+  JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
+  JWT_REFRESH_SECRET: Joi.string().required(),
+  JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
+
+  // Google OAuth
+  GOOGLE_CLIENT_ID: Joi.string().required(),
+  GOOGLE_CLIENT_SECRET: Joi.string().required(),
+  GOOGLE_CALLBACK_URL: Joi.string().default('http://localhost:3000/api/v1/auth/google/callback'),
+
+  // Frontend
+  FRONTEND_URL: Joi.string().default('http://localhost:5173'),
 });
