@@ -18,14 +18,18 @@ import { ERROR_CODES } from '../../common/constants';
 
 import type { User } from '../../../generated/prisma/client';
 import {
-  RegisterDto,
-  LoginDto,
-  ForgotPasswordDto,
-  ResetPasswordDto,
+  RegisterRequestDto,
+  LoginRequestDto,
+  ForgotPasswordRequestDto,
+  ResetPasswordRequestDto,
   AuthResponseDto,
   UserProfileDto,
 } from './dto';
-import { JwtPayload, JwtRefreshPayload, GoogleOAuthUser } from './types/auth.types';
+import {
+  JwtPayload,
+  JwtRefreshPayload,
+  GoogleOAuthUser,
+} from './types/auth.types';
 
 @Injectable()
 export class AuthService {
@@ -39,8 +43,10 @@ export class AuthService {
 
   // ─── Register ────────────────────────────────────────────────────────────────
 
-  async register(dto: RegisterDto): Promise<AuthResponseDto> {
-    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+  async register(dto: RegisterRequestDto): Promise<AuthResponseDto> {
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
     if (existing) throw new DuplicateException('User', 'email');
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
@@ -60,17 +66,21 @@ export class AuthService {
 
   // ─── Login ───────────────────────────────────────────────────────────────────
 
-  async login(dto: LoginDto, device?: string): Promise<AuthResponseDto> {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+  async login(dto: LoginRequestDto, device?: string): Promise<AuthResponseDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
 
     if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
     }
 
     const isMatch = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!isMatch) throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
+    if (!isMatch)
+      throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
 
-    if (!user.isActive) throw new ForbiddenException('Tài khoản đã bị vô hiệu hóa');
+    if (!user.isActive)
+      throw new ForbiddenException('Tài khoản đã bị vô hiệu hóa');
 
     this.logger.log(`User logged in: ${user.id}`);
     return this.buildAuthResponse(user, device);
@@ -78,7 +88,11 @@ export class AuthService {
 
   // ─── Refresh token ───────────────────────────────────────────────────────────
 
-  async refreshToken(userId: string, rawRefreshToken: string, device?: string): Promise<AuthResponseDto> {
+  async refreshToken(
+    userId: string,
+    rawRefreshToken: string,
+    device?: string,
+  ): Promise<AuthResponseDto> {
     const tokenHash = this.hashToken(rawRefreshToken);
 
     const stored = await this.prisma.refreshToken.findFirst({
@@ -91,8 +105,12 @@ export class AuthService {
       include: { user: true },
     });
 
-    if (!stored) throw new UnauthorizedException('Refresh token không hợp lệ hoặc đã hết hạn');
-    if (!stored.user.isActive) throw new ForbiddenException('Tài khoản đã bị vô hiệu hóa');
+    if (!stored)
+      throw new UnauthorizedException(
+        'Refresh token không hợp lệ hoặc đã hết hạn',
+      );
+    if (!stored.user.isActive)
+      throw new ForbiddenException('Tài khoản đã bị vô hiệu hóa');
 
     // Revoke the used token (rotation)
     await this.prisma.refreshToken.update({
@@ -100,7 +118,10 @@ export class AuthService {
       data: { isRevoked: true },
     });
 
-    return this.buildAuthResponse(stored.user, device ?? stored.device ?? undefined);
+    return this.buildAuthResponse(
+      stored.user,
+      device ?? stored.device ?? undefined,
+    );
   }
 
   // ─── Logout ──────────────────────────────────────────────────────────────────
@@ -116,8 +137,10 @@ export class AuthService {
 
   // ─── Forgot password ─────────────────────────────────────────────────────────
 
-  async forgotPassword(dto: ForgotPasswordDto): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+  async forgotPassword(dto: ForgotPasswordRequestDto): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
 
     // Always return success to avoid leaking email existence
     if (!user || !user.isActive) return;
@@ -136,7 +159,10 @@ export class AuthService {
       data: { userId: user.id, tokenHash, device: 'password-reset', expiresAt },
     });
 
-    const frontendUrl = this.configService.get<string>('frontendUrl', 'http://localhost:5173');
+    const frontendUrl = this.configService.get<string>(
+      'frontendUrl',
+      'http://localhost:5173',
+    );
     const resetUrl = `${frontendUrl}/auth/reset-password?token=${rawToken}`;
 
     // TODO: Replace with Nodemailer email sending when email module is implemented
@@ -145,7 +171,7 @@ export class AuthService {
 
   // ─── Reset password ──────────────────────────────────────────────────────────
 
-  async resetPassword(dto: ResetPasswordDto): Promise<void> {
+  async resetPassword(dto: ResetPasswordRequestDto): Promise<void> {
     const tokenHash = this.hashToken(dto.token);
 
     const stored = await this.prisma.refreshToken.findFirst({
@@ -169,7 +195,10 @@ export class AuthService {
 
     // Update password + revoke all tokens atomically
     await this.prisma.$transaction(async (tx) => {
-      await tx.user.update({ where: { id: stored.userId }, data: { passwordHash } });
+      await tx.user.update({
+        where: { id: stored.userId },
+        data: { passwordHash },
+      });
       await tx.refreshToken.updateMany({
         where: { userId: stored.userId },
         data: { isRevoked: true },
@@ -210,7 +239,8 @@ export class AuthService {
       });
     }
 
-    if (!user.isActive) throw new ForbiddenException('Tài khoản đã bị vô hiệu hóa');
+    if (!user.isActive)
+      throw new ForbiddenException('Tài khoản đã bị vô hiệu hóa');
 
     return this.buildAuthResponse(user);
   }
@@ -225,34 +255,59 @@ export class AuthService {
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-  private async buildAuthResponse(user: User, device?: string): Promise<AuthResponseDto> {
-    const { accessToken, refreshToken } = this.generateTokens(user.id, user.role, user.email);
+  private async buildAuthResponse(
+    user: User,
+    device?: string,
+  ): Promise<AuthResponseDto> {
+    const { accessToken, refreshToken } = this.generateTokens(
+      user.id,
+      user.role,
+      user.email,
+    );
     await this.saveRefreshToken(user.id, refreshToken, device);
     return { accessToken, refreshToken, user: this.mapToProfile(user) };
   }
 
   private generateTokens(userId: string, role: string, email: string) {
-    const accessPayload: JwtPayload = { sub: userId, role: role as any, email, type: 'access' };
+    const accessPayload: JwtPayload = {
+      sub: userId,
+      role: role as any,
+      email,
+      type: 'access',
+    };
     const refreshPayload: JwtRefreshPayload = { sub: userId, type: 'refresh' };
 
     const accessToken = this.jwtService.sign(accessPayload, {
       secret: this.configService.get<string>('jwt.accessSecret'),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expiresIn: this.configService.get<string>('jwt.accessExpiresIn', '15m') as any,
+      expiresIn: this.configService.get<string>(
+        'jwt.accessExpiresIn',
+        '15m',
+      ) as any,
     });
 
     const refreshToken = this.jwtService.sign(refreshPayload, {
       secret: this.configService.get<string>('jwt.refreshSecret'),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expiresIn: this.configService.get<string>('jwt.refreshExpiresIn', '7d') as any,
+      expiresIn: this.configService.get<string>(
+        'jwt.refreshExpiresIn',
+        '7d',
+      ) as any,
     });
 
     return { accessToken, refreshToken };
   }
 
-  private async saveRefreshToken(userId: string, refreshToken: string, device?: string): Promise<void> {
+  private async saveRefreshToken(
+    userId: string,
+    refreshToken: string,
+    device?: string,
+  ): Promise<void> {
     const tokenHash = this.hashToken(refreshToken);
-    const expiresInStr = this.configService.get<string>('jwt.refreshExpiresIn', '7d');
+    const expiresInStr = this.configService.get<string>(
+      'jwt.refreshExpiresIn',
+      '7d',
+    );
     const expiresAt = this.parseExpiresAt(expiresInStr);
     // Truncate User-Agent to match the DB column limit
     const deviceTruncated = device ? device.slice(0, 500) : undefined;
@@ -273,7 +328,12 @@ export class AuthService {
 
     const value = parseInt(match[1], 10);
     const unit = match[2];
-    const multipliers: Record<string, number> = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 };
+    const multipliers: Record<string, number> = {
+      s: 1000,
+      m: 60_000,
+      h: 3_600_000,
+      d: 86_400_000,
+    };
 
     return new Date(now + value * (multipliers[unit] ?? 86_400_000));
   }

@@ -12,7 +12,7 @@ import {
 } from '../../common/exceptions';
 import { ERROR_CODES } from '../../common/constants';
 
-import { CreateHouseholdDto, UpdateHouseholdDto } from './dto';
+import { CreateHouseholdRequestDto, UpdateHouseholdRequestDto } from './dto';
 
 /** Invite token length in bytes (→ 64 hex chars) */
 const INVITE_TOKEN_BYTES = 32;
@@ -27,7 +27,7 @@ export class HouseholdsService {
 
   // ─── Create household ────────────────────────────────────────────────────────
 
-  async create(userId: string, dto: CreateHouseholdDto) {
+  async create(userId: string, dto: CreateHouseholdRequestDto) {
     const household = await this.prisma.household.create({
       data: {
         name: dto.name,
@@ -188,7 +188,11 @@ export class HouseholdsService {
 
   // ─── Update household name ──────────────────────────────────────────────────
 
-  async update(householdId: string, userId: string, dto: UpdateHouseholdDto) {
+  async update(
+    householdId: string,
+    userId: string,
+    dto: UpdateHouseholdRequestDto,
+  ) {
     await this.assertAdmin(householdId, userId);
 
     await this.prisma.household.update({

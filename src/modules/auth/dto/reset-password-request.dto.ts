@@ -1,9 +1,15 @@
-// src/modules/auth/dto/reset-password.dto.ts
+// src/modules/auth/dto/reset-password-request.dto.ts
 
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
-export class ResetPasswordDto {
+export class ResetPasswordRequestDto {
   @ApiProperty({ description: 'Reset token nhận được qua email' })
   @IsString()
   @IsNotEmpty()

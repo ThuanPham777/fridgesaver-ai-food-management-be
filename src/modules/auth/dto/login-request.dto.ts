@@ -1,9 +1,9 @@
-// src/modules/auth/dto/login.dto.ts
+// src/modules/auth/dto/login-request.dto.ts
 
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
-export class LoginDto {
+export class LoginRequestDto {
   @ApiProperty({ example: 'user@example.com' })
   @IsEmail({}, { message: 'Email không hợp lệ' })
   @MaxLength(255)

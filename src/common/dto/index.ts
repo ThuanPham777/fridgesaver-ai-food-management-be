@@ -2,4 +2,5 @@
 // Barrel export for common DTOs
 
 export * from './api-response.dto';
+export * from './message-response.dto';
 export * from './pagination.dto';

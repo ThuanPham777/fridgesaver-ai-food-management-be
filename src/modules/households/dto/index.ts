@@ -1,4 +1,8 @@
 // src/modules/households/dto/index.ts
 
-export * from './create-household.dto';
-export * from './update-household.dto';
+// Request DTOs
+export * from './create-household-request.dto';
+export * from './update-household-request.dto';
+
+// Response DTOs
+export * from './household-response.dto';

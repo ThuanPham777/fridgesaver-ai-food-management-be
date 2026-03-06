@@ -1,4 +1,4 @@
-// src/modules/auth/dto/register.dto.ts
+// src/modules/auth/dto/register-request.dto.ts
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
@@ -11,7 +11,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class RegisterDto {
+export class RegisterRequestDto {
   @ApiProperty({ example: 'user@example.com' })
   @IsEmail({}, { message: 'Email không hợp lệ' })
   @MaxLength(255)

@@ -1,9 +1,9 @@
-// src/modules/auth/dto/forgot-password.dto.ts
+// src/modules/auth/dto/forgot-password-request.dto.ts
 
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, MaxLength } from 'class-validator';
 
-export class ForgotPasswordDto {
+export class ForgotPasswordRequestDto {
   @ApiProperty({ example: 'user@example.com' })
   @IsEmail({}, { message: 'Email không hợp lệ' })
   @MaxLength(255)

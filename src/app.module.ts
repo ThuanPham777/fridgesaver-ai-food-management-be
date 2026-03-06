@@ -7,7 +7,6 @@ import { ConfigModule } from '@nestjs/config';
 
 import { configuration, validationSchema } from './common/config';
 import { RequestLoggerMiddleware } from './common/middleware';
-import { LoggerModule } from './core/logger';
 import { HealthModule } from './core/health';
 import { PrismaModule } from './core/prisma';
 import { SharedModule } from './shared';
@@ -32,7 +31,6 @@ import { AppService } from './app.service';
     }),
 
     // Core modules
-    LoggerModule,
     HealthModule,
     PrismaModule,
 
