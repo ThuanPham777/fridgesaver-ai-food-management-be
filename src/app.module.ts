@@ -12,6 +12,7 @@ import { HealthModule } from './core/health';
 import { PrismaModule } from './core/prisma';
 import { SharedModule } from './shared';
 import { AuthModule } from './modules/auth/auth.module';
+import { HouseholdsModule } from './modules/households/households.module';
 import { JwtAuthGuard, RolesGuard } from './modules/auth/guards';
 
 import { AppController } from './app.controller';
@@ -40,6 +41,7 @@ import { AppService } from './app.service';
 
     // Feature modules
     AuthModule,
+    HouseholdsModule,
   ],
   controllers: [AppController],
   providers: [
