@@ -2,13 +2,17 @@
 // Root application module
 
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 
 import { configuration, validationSchema } from './common/config';
 import { RequestLoggerMiddleware } from './common/middleware';
 import { LoggerModule } from './core/logger';
 import { HealthModule } from './core/health';
+import { PrismaModule } from './core/prisma';
 import { SharedModule } from './shared';
+import { AuthModule } from './modules/auth/auth.module';
+import { JwtAuthGuard, RolesGuard } from './modules/auth/guards';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -29,17 +33,20 @@ import { AppService } from './app.service';
     // Core modules
     LoggerModule,
     HealthModule,
+    PrismaModule,
 
     // Shared module
     SharedModule,
 
-    // Add your feature modules here
-    // Example:
-    // UserModule,
-    // AuthModule,
+    // Feature modules
+    AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

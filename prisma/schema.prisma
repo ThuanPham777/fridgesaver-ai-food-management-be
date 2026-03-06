@@ -128,7 +128,6 @@ model User {
   phone                   String?  @db.VarChar(20)
   avatarUrl               String?  @map("avatar_url") @db.VarChar(500)
   role                    UserRole @default(user)
-  isEmailVerified         Boolean  @default(false) @map("is_email_verified")
   isActive                Boolean  @default(true) @map("is_active")
   address                 String?  @db.VarChar(500)
   dietaryPreferences      Json?    @map("dietary_preferences") @db.JsonB
@@ -163,7 +162,7 @@ model RefreshToken {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @map("user_id") @db.Uuid
   tokenHash String   @map("token_hash") @db.VarChar(255)
-  device    String?  @db.VarChar(100)
+  device    String?  @db.VarChar(500)
   expiresAt DateTime @map("expires_at")
   isRevoked Boolean  @default(false) @map("is_revoked")
   createdAt DateTime @default(now()) @map("created_at")
